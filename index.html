@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rutuja Sant, network security</title>
+<meta name="description" content="Network security engineer. Firewalls, SD-WAN and policy. Master of Cyber Security, Deakin University.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F3;
+  --panel:#FFFFFF;
+  --ink:#0F1720;
+  --ink-2:#4A5763;
+  --ink-3:#7C8994;
+  --rule:#CBD4DC;
+  --rule-2:#AEBAC5;
+  --blue:#1C4E8A;
+  --blue-soft:#DDE7F3;
+  --trust:#1A6B5B;
+  --trust-soft:#DCEDE8;
+  --dmz:#9A6A0F;
+  --dmz-soft:#F4EAD3;
+  --untrust:#A3372C;
+  --untrust-soft:#F6E0DC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:Archivo,system-ui,sans-serif;font-size:17px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:2px}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+
+/* ---------- masthead ---------- */
+header{border-bottom:1px solid var(--rule);background:var(--paper);position:sticky;top:0;z-index:20}
+.mast{display:flex;align-items:baseline;gap:20px;padding:16px 0}
+.who{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.nav{margin-left:auto;display:flex;gap:22px;font-size:14.5px}
+.nav a{color:var(--ink-2);text-decoration:none}
+.nav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- hero ---------- */
+.hero{padding:56px 0 8px}
+h1{
+  font-size:clamp(30px,5.4vw,52px);line-height:1.04;letter-spacing:-.035em;
+  font-weight:700;max-width:19ch;margin-bottom:20px;
+}
+.standfirst{font-size:19px;color:var(--ink-2);max-width:58ch;margin-bottom:8px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:22px;font-size:14px;color:var(--ink-2)}
+.facts b{color:var(--ink);font-weight:600}
+
+/* ---------- the diagram ---------- */
+.lab{margin:40px 0 0;border:1px solid var(--rule);background:var(--panel)}
+.lab-top{padding:14px 20px;border-bottom:1px solid var(--rule);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.lab-top h2{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.lab-top p{font-size:14px;color:var(--ink-3)}
+.diagram{padding:8px 12px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+svg{width:100%;height:auto;display:block;min-width:620px}
+.swipe{display:none;font-size:12.5px;color:var(--ink-3);padding:6px 20px 0}
+.verdict{
+  padding:12px 20px;border-top:1px solid var(--rule);font-size:15px;color:var(--ink-2);
+  min-height:52px;display:flex;align-items:center;gap:12px;
+}
+.stamp{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;
+  padding:3px 9px;border:1px solid;letter-spacing:.04em;white-space:nowrap;
+}
+.stamp.allow{color:var(--trust);border-color:var(--trust);background:var(--trust-soft)}
+.stamp.deny{color:var(--untrust);border-color:var(--untrust);background:var(--untrust-soft)}
+
+/* rule table */
+.rules{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:13px}
+.rules caption{
+  text-align:left;padding:14px 20px 8px;font-family:Archivo,sans-serif;font-size:14px;color:var(--ink-3);
+}
+.rules th{
+  text-align:left;font-weight:500;color:var(--ink-3);padding:6px 12px;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);white-space:nowrap;font-size:12px;
+}
+.rules td{padding:0;border-bottom:1px solid var(--rule)}
+.rules tr:last-child td{border-bottom:none}
+.rules button{
+  all:unset;display:block;width:100%;padding:9px 12px;cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);
+}
+.rules tr{transition:background .12s}
+.rules tr:hover{background:var(--blue-soft)}
+.rules tr[aria-selected=true]{background:var(--blue-soft);box-shadow:inset 3px 0 0 var(--blue)}
+.rules td:last-child button{color:var(--ink-3)}
+.act{font-weight:500}
+.act.a{color:var(--trust)} .act.d{color:var(--untrust)}
+.hint{padding:10px 20px 16px;font-size:13.5px;color:var(--ink-3)}
+
+/* ---------- sections ---------- */
+section{padding:72px 0 0}
+.head{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:8px}
+.head h2{font-size:23px;font-weight:700;letter-spacing:-.02em}
+.head span{font-size:14px;color:var(--ink-3);margin-left:auto}
+
+/* work entries */
+.entry{padding:30px 0;border-bottom:1px solid var(--rule);display:grid;grid-template-columns:200px 1fr;gap:32px}
+.entry:last-of-type{border-bottom:none}
+.entry .meta h3{font-size:18px;font-weight:600;letter-spacing:-.015em;margin-bottom:5px}
+.entry .meta .where{font-size:14px;color:var(--ink-2);margin-bottom:3px}
+.entry .meta .when{font-size:13px;color:var(--ink-3);font-family:'IBM Plex Mono',monospace}
+.entry .body p{font-size:16px;color:var(--ink-2);max-width:66ch;margin-bottom:11px}
+.entry .body p:last-child{margin-bottom:0}
+.entry .body strong{color:var(--ink);font-weight:600}
+.tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tools span{
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-2);
+  border:1px solid var(--rule-2);padding:2px 7px;
+}
+
+/* numbers strip */
+.counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border:1px solid var(--rule);background:var(--panel);margin-top:28px}
+.counts div{padding:18px 20px;border-right:1px solid var(--rule)}
+.counts div:last-child{border-right:none}
+.counts b{display:block;font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:500;letter-spacing:-.02em}
+.counts span{font-size:13px;color:var(--ink-3)}
+
+/* about + contact */
+.about{display:grid;grid-template-columns:1fr 300px;gap:48px;padding-top:26px}
+.about p{font-size:17px;color:var(--ink-2);max-width:62ch;margin-bottom:14px}
+.about p:last-child{margin-bottom:0}
+.side dl{font-size:14.5px}
+.side dt{font-weight:600;font-size:13px;color:var(--ink-3);margin-top:16px}
+.side dt:first-child{margin-top:0}
+.side dd{color:var(--ink-2);margin-top:3px}
+.side a{text-decoration:none;border-bottom:1px solid var(--rule-2)}
+.side a:hover{border-bottom-color:var(--blue)}
+
+footer{margin-top:76px;border-top:1px solid var(--rule);padding:24px 0 52px;font-size:13.5px;color:var(--ink-3)}
+footer .wrap{display:flex;gap:18px;flex-wrap:wrap}
+footer a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule-2)}
+
+@media (max-width:820px){
+  .wrap{padding:0 18px}
+  .entry{grid-template-columns:1fr;gap:12px}
+  .about{grid-template-columns:1fr;gap:30px}
+  .hero{padding:38px 0 4px}
+  .nav{gap:16px;font-size:14px}
+  .rules{font-size:12px}
+  .rules th{padding:6px 8px}
+  .rules button{padding:9px 8px;font-size:12px}
+  section{padding:54px 0 0}
+}
+@media (max-width:560px){
+  .hide-s{display:none}
+}
+@media (max-width:660px){
+  .swipe{display:block}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap mast">
+    <div class="who">Rutuja Sant</div>
+    <nav class="nav">
+      <a href="#work">Work</a>
+      <a href="#labs">Labs</a>
+      <a href="#about">About</a>
+      <a href="mailto:rutujasant@gmail.com">Email</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>I write the rules that decide what gets through.</h1>
+    <p class="standfirst">Network security engineer. I deployed Fortinet firewalls and SD-WAN at enterprise client sites across India, and I spend most of my time now on policy design, segmentation and working out why a tunnel will not come up.</p>
+    <div class="facts">
+      <span><b>Master of Cyber Security</b>, Deakin University</span>
+      <span>Victoria</span>
+      <span>Full working rights, no sponsorship</span>
+    </div>
+  </div>
+
+  <!-- ============ the thing that makes this page ============ -->
+  <div class="lab">
+    <div class="lab-top">
+      <h2>A policy I wrote, and what it does</h2>
+      <p>From the Palo Alto lab. Pick a rule to send a packet through it.</p>
+    </div>
+
+    <p class="swipe">Swipe the diagram sideways to see all of it.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 900 260" role="img" aria-label="Network diagram with an untrusted outside zone on the left, a firewall in the centre, a trusted internal LAN on the right and a DMZ below. Selecting a rule animates a packet along the matching path and shows whether the firewall allows or denies it.">
+        <defs>
+          <marker id="tip" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 z" fill="#AEBAC5"/>
+          </marker>
+        </defs>
+
+        <!-- paths, drawn first so the boxes sit on top -->
+        <path id="p-out-in"  d="M170,86 H370" stroke="#AEBAC5" stroke-width="1.5" fill="none"/>
+        <path id="p-fw-in"   d="M530,86 H730" stroke="#AEBAC5" stroke-width="1.5" fill="none"/>
+        <path id="p-fw-dmz"  d="M450,132 V196" stroke="#AEBAC5" stroke-width="1.5" fill="none"/>
+        <path id="p-dmz-fw"  d="M450,196 V132" stroke="#AEBAC5" stroke-width="1.5" fill="none"/>
+        <path id="p-in-fw"   d="M730,110 H530" stroke="#AEBAC5" stroke-width="1.5" fill="none"/>
+
+        <!-- untrust -->
+        <rect x="20" y="46" width="150" height="80" rx="3" fill="#F6E0DC" stroke="#A3372C" stroke-width="1.2"/>
+        <text x="34" y="72" font-family="IBM Plex Mono, monospace" font-size="12" fill="#A3372C">untrust</text>
+        <text x="34" y="94" font-family="Archivo, sans-serif" font-size="14" fill="#0F1720">The internet</text>
+        <text x="34" y="112" font-family="IBM Plex Mono, monospace" font-size="11" fill="#7C8994">0.0.0.0/0</text>
+
+        <!-- firewall -->
+        <rect x="370" y="36" width="160" height="96" rx="3" fill="#FFFFFF" stroke="#1C4E8A" stroke-width="1.8"/>
+        <text x="386" y="62" font-family="IBM Plex Mono, monospace" font-size="12" fill="#1C4E8A">PAN-OS</text>
+        <text x="386" y="86" font-family="Archivo, sans-serif" font-size="15" font-weight="600" fill="#0F1720">Firewall</text>
+        <text x="386" y="106" font-family="IBM Plex Mono, monospace" font-size="11" fill="#7C8994">App-ID, User-ID</text>
+        <text x="386" y="122" font-family="IBM Plex Mono, monospace" font-size="11" fill="#7C8994">threat profiles</text>
+
+        <!-- trust -->
+        <rect x="730" y="46" width="150" height="80" rx="3" fill="#DCEDE8" stroke="#1A6B5B" stroke-width="1.2"/>
+        <text x="744" y="72" font-family="IBM Plex Mono, monospace" font-size="12" fill="#1A6B5B">trust</text>
+        <text x="744" y="94" font-family="Archivo, sans-serif" font-size="14" fill="#0F1720">Internal LAN</text>
+        <text x="744" y="112" font-family="IBM Plex Mono, monospace" font-size="11" fill="#7C8994">10.0.10.0/24</text>
+
+        <!-- dmz -->
+        <rect x="370" y="196" width="160" height="48" rx="3" fill="#F4EAD3" stroke="#9A6A0F" stroke-width="1.2"/>
+        <text x="386" y="218" font-family="IBM Plex Mono, monospace" font-size="12" fill="#9A6A0F">dmz</text>
+        <text x="386" y="236" font-family="Archivo, sans-serif" font-size="13" fill="#0F1720">Web servers</text>
+
+        <!-- the packet -->
+        <g id="packet" opacity="0">
+          <rect x="-9" y="-6" width="18" height="12" rx="1.5" fill="#1C4E8A"/>
+        </g>
+        <!-- where it stops when denied -->
+        <g id="block" opacity="0">
+          <line x1="-9" y1="-9" x2="9" y2="9" stroke="#A3372C" stroke-width="2.6"/>
+          <line x1="9" y1="-9" x2="-9" y2="9" stroke="#A3372C" stroke-width="2.6"/>
+        </g>
+      </svg>
+    </div>
+
+    <table class="rules">
+      <caption>Six of the forty rules. Implicit any-any allows were removed first.</caption>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">From</th>
+          <th scope="col">To</th>
+          <th scope="col">Application</th>
+          <th scope="col">Action</th>
+          <th scope="col" class="hide-s">Why</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div class="verdict" id="verdict">
+      <span class="mono" style="color:var(--ink-3)">Pick a rule above.</span>
+    </div>
+    <p class="hint">The point of the exercise was the last rule. A default deny at the bottom is what makes every rule above it mean something.</p>
+  </div>
+
+  <!-- ============ work ============ -->
+  <section id="work">
+    <div class="head">
+      <h2>Work</h2>
+      <span>Internship and industry capstone</span>
+    </div>
+
+    <article class="entry">
+      <div class="meta">
+        <h3>Network Security Intern</h3>
+        <div class="where">Orbit Techsol India, Pune</div>
+        <div class="when">Oct 2023 to Feb 2024</div>
+      </div>
+      <div class="body">
+        <p>Deployed <strong>SD-WAN and FortiGate firewalls at enterprise client sites across India</strong>, covering branch to datacentre connectivity, policy-based routing and application-aware traffic steering.</p>
+        <p>Every client wanted something different, so the work was mostly translation: sit with their people across regional offices, understand what they actually needed to segment and why, then turn that into rule sets, access control matrices and a topology that matched their compliance position.</p>
+        <p>Alongside that, the daily ticket queue against SLA targets. Firewall change requests, VPN faults, access issues, SIEM escalations. I also tuned the correlation rules and alert thresholds on the SIEM dashboard to cut false positives for the analysts, and wrote the runbooks for change management and new site onboarding that went into the internal knowledge base.</p>
+        <div class="tools">
+          <span>FortiGate</span><span>SD-WAN</span><span>IPsec</span><span>SSL VPN</span><span>NAT</span><span>SIEM</span><span>SLA ticketing</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="meta">
+        <h3>Backend Developer</h3>
+        <div class="where">Hardhat Enterprises, Deakin industry capstone</div>
+        <div class="when">2025 to 2026</div>
+      </div>
+      <div class="body">
+        <p>Five-person backend team building an SMS phishing detection engine. I built the threat intelligence enrichment and the detection rule evaluation pipeline, including <strong>URL entropy analysis and infrastructure fingerprinting</strong>, as Node.js middleware.</p>
+        <p>I also wrote the centralised error handling, so a failure inside any detection module was caught and reported the same way.</p>
+        <p>I set the standard a pull request had to meet before it could merge, and reviewed the security-sensitive changes.</p>
+        <div class="tools">
+          <span>Node.js</span><span>Express</span><span>MongoDB</span><span>Jest</span><span>code review</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="meta">
+        <h3>Tool Developer</h3>
+        <div class="where">Penetration testing toolkit, same capstone</div>
+        <div class="when">2025</div>
+      </div>
+      <div class="body">
+        <p>Built the Dynamic Workflow Builder, a shell scripting layer that chains the toolkit's scripts so one tool's output feeds the next stage. Integrated the Gemini API to interpret scan output, parsed results with jq, and standardised the finding schema so every result carries an evaluation path, expected value, risk rating and remediation.</p>
+        <p><strong>Found a command injection in the reconnaissance script</strong> and fixed it by blocking destructive shell input and adding input validation to host discovery. It was our own tool, which is the part worth sitting with.</p>
+        <div class="tools">
+          <span>Bash</span><span>jq</span><span>Kali</span><span>Gemini API</span><span>input validation</span>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============ labs ============ -->
+  <section id="labs">
+    <div class="head">
+      <h2>Labs</h2>
+      <span>Built to break, then watched</span>
+    </div>
+
+    <article class="entry">
+      <div class="meta">
+        <h3>Enterprise firewall policy</h3>
+        <div class="where">Palo Alto PAN-OS, EVE-NG</div>
+      </div>
+      <div class="body">
+        <p>A virtual enterprise network with DMZ, internal LAN and guest zones, with a PAN-OS next-generation firewall between them. Forty-odd rules using App-ID, User-ID, URL filtering and threat prevention profiles, and the implicit any-any allows taken out.</p>
+        <p>Then I attacked it from a Kali host with port scans, exploit attempts and malicious DNS lookups, and read the firewall logs to check the policy hits and IPS triggers against what each rule was meant to do.</p>
+        <p>I also wrote a reference mapping PAN-OS policy settings to their FortiGate equivalents, for cross-platform migration work.</p>
+        <div class="tools">
+          <span>PAN-OS</span><span>EVE-NG</span><span>App-ID</span><span>User-ID</span><span>IPS</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="meta">
+        <h3>Attack and defence</h3>
+        <div class="where">Deakin SIT716</div>
+      </div>
+      <div class="body">
+        <p>A dual-router screened subnet with a full Cisco-style ACL rule set, and IP-in-IP, GRE and SSH tunnels between Kali and Ubuntu hosts.</p>
+        <p>On Mininet topologies I ran IP spoofing, ping floods, reflection and TCP SYN floods with hping3 and Metasploit, <strong>measured the CPU and memory cost of each attack</strong>, and confirmed the traffic in Wireshark. Also demonstrated DHCP starvation against a lab server, and used Snort logs to pick out command and control traffic from Betabot, Zeus and Pony Downloader.</p>
+        <div class="tools">
+          <span>Cisco ACL</span><span>GRE</span><span>Mininet</span><span>hping3</span><span>Snort</span><span>Wireshark</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="entry">
+      <div class="meta">
+        <h3>Detection pipeline</h3>
+        <div class="where">Wazuh, Elastic Stack</div>
+      </div>
+      <div class="body">
+        <p>A home lab SOC pipeline taking in firewall logs, Windows Sysmon telemetry and DNS query logs. Over fifteen detection rules tuned for brute-force authentication, suspicious outbound connections and repeated firewall denies from a single source, each one tested by running the actual attack from Kali rather than assuming it would fire.</p>
+        <p>Dashboards for top blocked source IPs, high severity alert trends and firewall deny events.</p>
+        <div class="tools">
+          <span>Wazuh</span><span>Elastic</span><span>Sysmon</span><span>detection rules</span>
+        </div>
+      </div>
+    </article>
+
+    <div class="counts">
+      <div><b>40+</b><span>firewall rules written</span></div>
+      <div><b>15+</b><span>detection rules tuned</span></div>
+      <div><b>1</b><span>command injection found</span></div>
+      <div><b>5</b><span>months on a real ticket queue</span></div>
+    </div>
+  </section>
+
+  <!-- ============ about ============ -->
+  <section id="about">
+    <div class="head">
+      <h2>About</h2>
+    </div>
+    <div class="about">
+      <div>
+        <p>I came to security through networks rather than the other way around. My internship in Pune had me deploying firewalls at client sites, and most of the work there was not the configuration itself. It was working out what each client actually needed to keep apart, and from whom.</p>
+        <p>Since then I have finished a Master of Cyber Security at Deakin and spent the labs building things specifically so I could attack them and watch what the logs said. I am more interested in the gap between what a policy is supposed to do and what it does than in collecting tools.</p>
+        <p>Looking for junior network engineering, network security or network operations roles in Victoria. CCNA and Security+ are both in progress.</p>
+      </div>
+      <aside class="side">
+        <dl>
+          <dt>Education</dt>
+          <dd>Master of Cyber Security (Professional)<br>Deakin University, 2024 to 2026</dd>
+          <dd style="margin-top:8px">BE Computer Engineering<br>Sinhgad College of Engineering, Pune</dd>
+
+          <dt>Certifications</dt>
+          <dd>Fortinet Certified Fundamentals in Cybersecurity<br>Fortinet NSE 1, 2 and 3<br>Google Cybersecurity Professional<br>CCNA, in progress<br>CompTIA Security+, in progress</dd>
+
+          <dt>Also</dt>
+          <dd>Conference volunteer, AISA CyberCon 2025, Melbourne</dd>
+
+          <dt>Contact</dt>
+          <dd>
+            <a href="mailto:rutujasant@gmail.com">rutujasant@gmail.com</a><br>
+            <a href="tel:+61435753794">+61 435 753 794</a><br>
+            <a href="https://linkedin.com/in/rutuja-sant-sec">linkedin.com/in/rutuja-sant-sec</a><br>
+            <a href="https://github.com/RutujaSant">github.com/RutujaSant</a>
+          </dd>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Rutuja Sant, Victoria</span>
+    <a href="mailto:rutujasant@gmail.com">rutujasant@gmail.com</a>
+    <a href="https://linkedin.com/in/rutuja-sant-sec">LinkedIn</a>
+    <a href="https://github.com/RutujaSant">GitHub</a>
+  </div>
+</footer>
+
+<script>
+/* ---------------------------------------------------------
+   The rule table drives the diagram. Picking a rule sends a
+   packet along the matching path and stamps allow or deny.
+   --------------------------------------------------------- */
+const RULES = [
+  { n:"1", from:"untrust", to:"dmz",     app:"web-browsing, ssl", act:"allow",
+    why:"public site, ports 80 and 443 only",
+    path:"p-out-in", second:"p-fw-dmz",
+    note:"Traffic from the internet reaches the web servers in the DMZ. Nothing else from outside gets that far." },
+
+  { n:"2", from:"untrust", to:"trust",   app:"any",               act:"deny",
+    why:"nothing from outside reaches the LAN",
+    path:"p-out-in", stopAt:0.52,
+    note:"Stopped at the firewall. There is no rule that lets the internet into the internal LAN, and the default deny catches it." },
+
+  { n:"3", from:"trust",   to:"untrust", app:"web-browsing, dns",  act:"allow",
+    why:"staff browsing, URL filtered",
+    path:"p-in-fw", second:"p-out-in", reverse:true,
+    note:"Staff can browse out. URL filtering and threat prevention profiles are applied on the way." },
+
+  { n:"4", from:"dmz",     to:"trust",   app:"mysql",             act:"deny",
+    why:"a compromised web server stops here",
+    path:"p-dmz-fw", stopAt:0.75,
+    note:"This is the rule that matters. If someone takes the web server, they still cannot reach the database on the internal LAN." },
+
+  { n:"5", from:"trust",   to:"dmz",     app:"ssh",               act:"allow",
+    why:"admin access from the LAN only",
+    path:"p-in-fw", second:"p-fw-dmz",
+    note:"Administrators reach the DMZ over SSH, but only from inside. User-ID restricts it further to the admin group." },
+
+  { n:"6", from:"any",     to:"any",     app:"any",               act:"deny",
+    why:"default deny, and it is logged",
+    path:"p-out-in", stopAt:0.52,
+    note:"Everything that matched nothing above lands here. Logging the default deny is how you find the rule you forgot to write." },
+];
+
+const tbody  = document.getElementById("tbody");
+const svg    = document.querySelector("svg");
+const packet = document.getElementById("packet");
+const block  = document.getElementById("block");
+const verdict= document.getElementById("verdict");
+let timer = null;
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+RULES.forEach((r, i) => {
+  const tr = document.createElement("tr");
+  tr.setAttribute("aria-selected", "false");
+  const cells = [
+    r.n,
+    r.from,
+    r.to,
+    r.app,
+    `<span class="act ${r.act === "allow" ? "a" : "d"}">${r.act}</span>`,
+    r.why,
+  ];
+  cells.forEach((c, ci) => {
+    const td = document.createElement("td");
+    if (ci === 5) td.className = "hide-s";
+    const b = document.createElement("button");
+    b.innerHTML = c;
+    b.setAttribute("aria-label", `Rule ${r.n}, ${r.from} to ${r.to}, ${r.app}, ${r.act}`);
+    b.onclick = () => run(i);
+    td.appendChild(b);
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+});
+
+function pointOn(id, t) {
+  const p = document.getElementById(id);
+  const len = p.getTotalLength();
+  return p.getPointAtLength(len * t);
+}
+
+function paint(rule, on) {
+  [rule.path, rule.second].forEach(id => {
+    if (!id) return;
+    const p = document.getElementById(id);
+    p.setAttribute("stroke", on ? (rule.act === "allow" ? "#1A6B5B" : "#A3372C") : "#AEBAC5");
+    p.setAttribute("stroke-width", on ? "2.6" : "1.5");
+  });
+}
+
+function run(i) {
+  const rule = RULES[i];
+  clearInterval(timer);
+  RULES.forEach((r, j) => {
+    tbody.children[j].setAttribute("aria-selected", j === i ? "true" : "false");
+    paint(r, false);
+  });
+  paint(rule, true);
+
+  const legs = [rule.path, rule.second].filter(Boolean);
+  const stop = rule.stopAt ?? 1;
+  block.setAttribute("opacity", "0");
+  packet.setAttribute("opacity", "1");
+
+  const show = (txt, act) => {
+    verdict.innerHTML =
+      `<span class="stamp ${act}">${act.toUpperCase()}</span><span>${txt}</span>`;
+  };
+
+  if (reduced) {
+    const pt = pointOn(legs[legs.length - 1], stop);
+    packet.setAttribute("transform", `translate(${pt.x},${pt.y})`);
+    if (rule.act === "deny") {
+      block.setAttribute("transform", `translate(${pt.x},${pt.y})`);
+      block.setAttribute("opacity", "1");
+      packet.setAttribute("opacity", "0");
+    }
+    show(rule.note, rule.act);
+    return;
+  }
+
+  let leg = 0, t = 0;
+  const step = 0.022;
+  timer = setInterval(() => {
+    const id = legs[leg];
+    const limit = (leg === legs.length - 1) ? stop : 1;
+    t += step;
+    if (t >= limit) {
+      if (leg < legs.length - 1) { leg++; t = 0; return; }
+      clearInterval(timer);
+      const pt = pointOn(id, limit);
+      if (rule.act === "deny") {
+        packet.setAttribute("opacity", "0");
+        block.setAttribute("transform", `translate(${pt.x},${pt.y})`);
+        block.setAttribute("opacity", "1");
+      }
+      show(rule.note, rule.act);
+      return;
+    }
+    const pt = pointOn(id, rule.reverse && leg === 0 ? 1 - t : t);
+    packet.setAttribute("transform", `translate(${pt.x},${pt.y})`);
+  }, 16);
+}
+</script>
+</body>
+</html>
